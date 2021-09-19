@@ -2,11 +2,14 @@ const puppeteer = require('puppeteer');
 console.log('Starting parse')
 const fs = require('fs')
 
+const urls = [
+    'http://www.primorsk.vybory.izbirkom.ru/region/izbirkom?action=show&root=252000008&tvd=4254005265112&vrn=100100067795849&prver=0&pronetvd=null&region=25&sub_region=25&type=242&report_mode=null',
+    'http://www.primorsk.vybory.izbirkom.ru/region/izbirkom?action=show&root=252000008&tvd=4254005265113&vrn=100100067795849&prver=0&pronetvd=null&region=25&sub_region=25&type=242&report_mode=null'
+]
 
-const url = 'http://www.primorsk.vybory.izbirkom.ru/region/izbirkom?action=show&root=252000008&tvd=4254005265112&vrn=100100067795849&prver=0&pronetvd=null&region=25&sub_region=25&type=242&report_mode=null'
+const url = urls[0]
 
-
-const run = async () => {
+const runParse = async () => {
     const browser = await puppeteer.launch();
 
     const data = await runPage(browser, url)
@@ -37,31 +40,39 @@ const runPage = async (browser, url) => {
     })
 
     const tasks = data.map((d, i) => {
-        const runTask = async () => {
+        return async () => {
             const selector = `.table-bordered > tbody:nth-child(1) > tr:nth-child(${i + 1}) > td:nth-child(3)`
-            const buffer = await screenshot(page, selector)
+            await page.waitForSelector(selector)
+            const buffer = await screenshot(page, selector, i)
             data[i].value = buffer
         }
-        return runTask()
     })
 
-    await Promise.all(tasks)
+    await tasks.reduce((p, task) => {
+        return p.then(() => {
+            return task()
+        })
+    }, Promise.resolve().then(r => r))
 
     await page.close();
     return data
 }
 
-const screenshot = async (page, selector) => {
+const screenshot = async (page, selector, i) => {
     const valueField = await page.$(selector);
 
     const result = await valueField.screenshot({
-        path: 'testim.png'
+        path: `src/output/test${i}.png`
     });
 
     return result
 }
 
-run()
+runParse()
+
+const run = async () => {
+
+}
 
 // console.log(res)
 
