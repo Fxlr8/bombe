@@ -11,6 +11,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "puppeteer": "^10.2.0"
+    "puppeteer": "^10.2.0",
+    "tesseract.js": "^2.1.5"
   }
 }
